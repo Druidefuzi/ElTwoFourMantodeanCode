@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<!-- A work tab for scarabs.
+
+	     Scarabs are Intelligence.Animal and so never show up in the vanilla Work tab, which lists
+	     FreeColonists. Until now the only way to influence what a scarab did was obedience
+	     training, which decays and silently switches the work off again.
+
+	     Both defs live in this one file on purpose: MantodeanDefOf binds Manto_ScarabWork, so
+	     installing the button without the table (or the other way round) would produce a red
+	     error. Keeping them together makes that impossible.
+
+	     The work-priority columns are NOT listed here. Mantodean.ScarabTableColumns inserts one
+	     per entry in the scarab race's mechEnabledWorkTypes at startup, reusing the
+	     WorkPriority_* column defs vanilla generates for its own Work tab. That way this file
+	     never has to be edited again when the race gains or loses a work type. -->
+
+	<PawnTableDef>
+		<defName>Manto_ScarabWork</defName>
+		<workerClass>PawnTable_Animals</workerClass>
+		<columns>
+			<li>LabelWithIcon</li>
+			<li>RemainingSpace</li>
+		</columns>
+	</PawnTableDef>
+
+	<MainButtonDef>
+		<defName>Manto_Scarabs</defName>
+		<label>scarabs</label>
+		<description>Choose which of your scarabs does what kinds of work, and in what order. Scarabs are not colonists, so they do not appear in the work tab, and they still need obedience training before they will act on any of this.</description>
+		<tabWindowClass>Mantodean.MainTabWindow_Scarabs</tabWindowClass>
+		<workerClass>Mantodean.MainButtonWorker_Scarabs</workerClass>
+		<order>45</order>
+		<closesWorldView>true</closesWorldView>
+	</MainButtonDef>
+
+</Defs>

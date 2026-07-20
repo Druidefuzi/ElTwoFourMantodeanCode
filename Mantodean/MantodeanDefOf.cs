@@ -24,5 +24,9 @@ namespace Mantodean
 
 		public static ThingDef L24_Animal_Scarab;
 
+		// Declared alongside the MainButtonDef in Defs/Misc/ScarabTab_Mantodean.xml, so the two
+		// cannot be half-installed.
+		public static PawnTableDef Manto_ScarabWork;
+
     }
 }
