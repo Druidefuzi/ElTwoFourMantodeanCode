@@ -419,7 +419,19 @@ namespace Mantodean.Druid.GeneExtract
             }
             if (whatToDo == "Evolve")
             {
-                if (ContainedPawn.health.hediffSet.HasHediff(oldHediff))
+                // The Transform branch above wraps everything in `if (ContainedPawn != null)`;
+                // this one went straight to ContainedPawn.health and threw
+                // NullReferenceException out of Tick whenever Finish() ran on an empty machine.
+                // That is reachable: the occupant can be dropped, drafted out, die, or the timer
+                // can reach zero while nobody is actually inside.
+                //
+                // oldHediff and newHediff are checked too. Both are saved by ExposeData, but
+                // whatToDo is saved as well, so a save written between "Evolve selected" and
+                // "hediff chosen" reloads with a mode set and no pair to apply.
+                if (ContainedPawn != null
+                    && oldHediff != null
+                    && newHediff != null
+                    && ContainedPawn.health.hediffSet.HasHediff(oldHediff))
                 {
                     Hediff oldOne = ContainedPawn.health.hediffSet.GetFirstHediffOfDef(oldHediff);
                     BodyPartRecord partOfOld = oldOne.Part;
