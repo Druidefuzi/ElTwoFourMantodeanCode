@@ -68,7 +68,9 @@ Evidence that a hive has moved past simply issuing mutagens and has begun refini
 			<L24_Manto_Ganglion>4</L24_Manto_Ganglion>
 		</costList>
 		<building>
-			<destroySound>BuildingDestroyed_Soft_Big</destroySound>
+			<!-- There is no BuildingDestroyed_Soft_Big in vanilla; the soft set only goes up to
+			     Medium. Using the Big name logged "Could not resolve cross-reference" on load. -->
+			<destroySound>BuildingDestroyed_Soft_Medium</destroySound>
 		</building>
 		<comps>
 

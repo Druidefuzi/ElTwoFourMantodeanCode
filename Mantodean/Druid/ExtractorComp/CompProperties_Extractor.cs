@@ -13,11 +13,18 @@ namespace Mantodean.Druid.ExtractorComp
         public bool canTransform = false;
         public bool canExtract = false;
         public bool canEvolve = false; 
-        public PawnKindDef transformPawn = PawnKindDefOf.FleshmassNucleus;
+        // These two used to be initialised from DefOfs right here. Field initialisers on
+        // CompProperties run while the XML is being parsed, which is BEFORE DefOfHelper binds
+        // anything, so both were simply null and the game logged
+        // "Tried to use an uninitialized DefOf of type PawnKindDefOf / DamageDefOf". Worse,
+        // GetFloatMenuOptions then dereferenced transformPawn().race and threw a
+        // NullReferenceException every time a pawn right-clicked the building. Resolve them in
+        // ResolveReferences instead, which is exactly what the warning tells you to do.
+        public PawnKindDef transformPawn;
         public ThingDef extractThing;
         public int extractAmount = 0;
         public float fuelConsumptionRate = 1f;
-        public DamageDef extractDamage=DamageDefOf.Bite;
+        public DamageDef extractDamage;
         public List<HediffDef> oldHediffs = new List<HediffDef>();
         public List<HediffDef> newHediffs = new List<HediffDef>();
 
@@ -30,6 +37,23 @@ namespace Mantodean.Druid.ExtractorComp
         public string extractIconPath;
         public string evolveDescription = "";
         public string transformDescription = "";
+
+        public override void ResolveReferences(ThingDef parentDef)
+        {
+            base.ResolveReferences(parentDef);
+
+            // Runs after all defs are loaded and DefOfs are bound, so this is safe here.
+            // Only fills in what the XML left unset.
+            if (extractDamage == null)
+            {
+                extractDamage = DamageDefOf.Bite;
+            }
+
+            // transformPawn is deliberately NOT defaulted. A building that does not use the
+            // Transform mode has no sensible transform target, and the old default
+            // (PawnKindDefOf.FleshmassNucleus) is Anomaly content that is null anyway without
+            // that DLC. Callers must handle null - see Building_TransformerDruid.
+        }
 
 
 

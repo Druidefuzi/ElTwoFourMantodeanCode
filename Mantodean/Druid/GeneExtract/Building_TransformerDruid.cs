@@ -208,10 +208,21 @@ namespace Mantodean.Druid.GeneExtract
                     ticksSinceStart = 0;
 
                 }
+                // Running out of fuel PAUSES the machine, it does not abort it.
+                //
+                // This used to set startWorking = false and zero ticksSinceStart, which
+                // deadlocked the building permanently. Nothing sets startWorking back to true
+                // except the gizmo and the `ticksRemaining < amountOfTicks` check at the top of
+                // Tick - and if the machine stalled before ever decrementing the timer, that
+                // check is false too, because ticksRemaining still equals amountOfTicks. Refuel
+                // and nothing happens: the first branch needs startWorking, the second needs a
+                // null comp, this one needs Fuel <= 0, so no branch runs at all. The building sits
+                // at full duration reporting "Fuel is empty" with a full tank.
+                //
+                // Leaving startWorking alone means the first branch picks straight back up once
+                // fuel is available and clears the message itself.
                 else if (CompRefuelableComp != null && CompRefuelableComp.Fuel <= 0 && message == "")
                 {
-                    ticksSinceStart = 0;
-                    startWorking = false;
                     if (whatToDo == "Transform" )
                     {
                         message = "Fuel is empty," + this.ContainedPawn.Name + "'s transformation has stopped";
@@ -225,7 +236,9 @@ namespace Mantodean.Druid.GeneExtract
                         message = "Fuel is empty," + this.ContainedPawn.Name + "'s evolving has stopped";
                     }
 
-                    Messages.Message(message, new LookTargets(ContainedPawn), MessageTypeDefOf.PositiveEvent);
+                    // Was PositiveEvent, which is the wrong colour and the wrong sound for
+                    // "your machine just stalled".
+                    Messages.Message(message, new LookTargets(ContainedPawn), MessageTypeDefOf.NegativeEvent);
 
                 }
 
@@ -528,7 +541,11 @@ namespace Mantodean.Druid.GeneExtract
                         SelectPawn(selPawn);
                     }), selPawn, this);
                 }
-                else if (selPawn.def != CompExtractorComp.transformPawn().race && SelectedPawn == selPawn && !selPawn.IsPrisonerOfColony)
+                // ?. because transformPawn is null on any building that does not use the Transform
+                // mode. This line threw a NullReferenceException out of GetFloatMenuOptions every
+                // time a pawn right-clicked such a building. With no transform target configured,
+                // the pawn is by definition not already that target, so null must read as "true".
+                else if (CompExtractorComp.transformPawn()?.race != selPawn.def && SelectedPawn == selPawn && !selPawn.IsPrisonerOfColony)
                 {
                     yield return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption("EnterBuilding".Translate(this), delegate
                     {
