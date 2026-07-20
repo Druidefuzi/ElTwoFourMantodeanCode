@@ -39,20 +39,12 @@ namespace Mantodean
                 insertAt = table.columns.Count;
             }
 
-            // Obedience first, because without it none of the work columns do anything.
-            // L24_ThinkTree_Scarab wraps JobGiver_Housekeeper in a
-            // ThinkNode_ConditionalTrainableCompleted for Obedience, so an untrained scarab never
-            // reaches the job giver at all and falls through to ordinary animal wandering. Worse,
-            // obedience decays: a scarab that was working simply stops one day, with nothing
-            // anywhere saying why. Vanilla already generates a Trainable_Obedience column for the
-            // Animals tab, so showing it here costs nothing and makes the gate visible next to
-            // the priorities it gates.
-            PawnColumnDef obedience = DefDatabase<PawnColumnDef>.GetNamedSilentFail("Trainable_Obedience");
-            if (obedience != null && !table.columns.Contains(obedience))
-            {
-                table.columns.Insert(insertAt, obedience);
-                insertAt++;
-            }
+            // No obedience column here on purpose. It was added while
+            // L24_ThinkTree_Scarab still gated JobGiver_Housekeeper behind
+            // ThinkNode_ConditionalTrainableCompleted, to make that gate visible next to the
+            // priorities it silently disabled. The gate has since been removed at the author's
+            // request, so showing obedience in a work tab would now imply a dependency that no
+            // longer exists. It is still on the Animals tab, where it belongs.
 
             // WorkTypeDefsInPriorityOrder is the same ordering the vanilla Work tab uses, so the
             // columns line up with what the player already knows.

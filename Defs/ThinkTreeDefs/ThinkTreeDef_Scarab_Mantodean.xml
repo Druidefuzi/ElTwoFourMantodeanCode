@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<!-- =================== ThinkTree Scarab ======================= -->
+
+	<!-- REPLACES the file of the same name in the mod's 1.6/Defs/ThinkTreeDefs.
+	     Same defName, same path, so it is a drop-in swap rather than an addition.
+
+	     Changed: the ThinkNode_ConditionalTrainableCompleted wrapper that required
+	     Obedience is gone, at the mod author's request. Scarabs now reach
+	     JobGiver_Housekeeper as soon as they belong to a faction, so a freshly
+	     tamed one starts working immediately instead of wandering until a handler
+	     has trained it - and, more importantly, it does not silently stop working
+	     later when obedience decays below the threshold.
+
+	     ThinkNode_Tagger is kept. TrainedAnimalBehavior is only a marker on the
+	     resulting job saying "this is deliberate animal work", not a training
+	     check, so it is still correct for an untrained scarab. -->
+
+	<ThinkTreeDef>
+		<defName>L24_ThinkTree_Scarab</defName>
+		<insertTag>Animal_PreWander</insertTag>
+		<insertPriority>1</insertPriority>
+		<thinkRoot Class="ThinkNode_ConditionalHasFaction">
+			<subNodes>
+				<li Class="ThinkNode_ConditionalPawnKind">
+					<pawnKind>L24_Animal_Scarab</pawnKind>
+					<subNodes>
+						<li Class="ThinkNode_Tagger">
+							<tagToGive>TrainedAnimalBehavior</tagToGive>
+							<subNodes>
+								<li Class="Mantodean.JobGiver_Housekeeper" />
+							</subNodes>
+						</li>
+					</subNodes>
+				</li>
+			</subNodes>
+		</thinkRoot>
+	</ThinkTreeDef>
+
+	<!-- =================== Endline ======================= -->
+
+</Defs>
