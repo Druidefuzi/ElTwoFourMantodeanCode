@@ -433,20 +433,41 @@ namespace Mantodean.Druid.GeneExtract
                     && newHediff != null
                     && ContainedPawn.health.hediffSet.HasHediff(oldHediff))
                 {
-                    Hediff oldOne = ContainedPawn.health.hediffSet.GetFirstHediffOfDef(oldHediff);
-                    BodyPartRecord partOfOld = oldOne.Part;
-                    Hediff newOne = HediffMaker.MakeHediff(newHediff, ContainedPawn, partOfOld);
+                    // ContainedPawn is a computed property - innerContainer.FirstOrDefault() as
+                    // Pawn - so it silently becomes null the moment the occupant leaves the
+                    // container, including by dying. Capture it once. Re-reading it after
+                    // mutating health is what threw NullReferenceException here.
+                    Pawn pawn = ContainedPawn;
 
-                    // The removal was commented out, so Evolve added the upgraded mutagen while
-                    // leaving the old one in place - the pawn ended up carrying both on the same
-                    // body part instead of being upgraded. partOfOld and newOne are both captured
-                    // above, so removing first is safe and avoids the two ever coexisting.
-                    ContainedPawn.health.RemoveHediff(oldOne);
-                    ContainedPawn.health.AddHediff(newOne);
-                    string letterMessage = ContainedPawn.Label + " has evolved and replaced " + ContainedPawn.Possessive() + " " + oldHediff.label + " with " + newHediff.label;
+                    Hediff oldOne = pawn.health.hediffSet.GetFirstHediffOfDef(oldHediff);
+                    BodyPartRecord partOfOld = oldOne.Part;
+
+                    // The mutagens inherit AddedBodyPartBase and carry addedPartProps, so they
+                    // are real implants rather than a status. Calling RemoveHediff on one that
+                    // sits on a vital part - a torso shell, say - takes the part with it and
+                    // kills the occupant mid-swap, which is exactly how this crashed.
+                    //
+                    // RestorePart then AddHediff is what vanilla itself does in
+                    // Recipe_InstallArtificialBodyPart.ApplyOnPawn when replacing a prosthetic:
+                    // the part is restored, taking the old implant off with it, and the new one
+                    // is installed on the same part. Nobody dies.
+                    if (partOfOld != null)
+                    {
+                        pawn.health.RestorePart(partOfOld);
+                        pawn.health.AddHediff(newHediff, partOfOld);
+                    }
+                    else
+                    {
+                        // Whole-body hediff: there is no part to restore. RestorePart(null) only
+                        // logs an error, so handle this case the plain way.
+                        pawn.health.RemoveHediff(oldOne);
+                        pawn.health.AddHediff(newHediff);
+                    }
+
+                    string letterMessage = pawn.Label + " has evolved and replaced " + pawn.Possessive() + " " + oldHediff.label + " with " + newHediff.label;
                     // Messages.Message(ContainedPawn.Label + " has evolved and replaced " + ContainedPawn.Possessive() + " " + oldHediff + " with " + newHediff.label + c.transformPawn().label, new LookTargets(ContainedPawn), MessageTypeDefOf.PositiveEvent);
 
-                    Find.LetterStack.ReceiveLetter("Evolved!", letterMessage, LetterDefOf.PositiveEvent, new LookTargets(ContainedPawn), null, null, null, null, 1, true);
+                    Find.LetterStack.ReceiveLetter("Evolved!", letterMessage, LetterDefOf.PositiveEvent, new LookTargets(pawn), null, null, null, null, 1, true);
 
 
 
