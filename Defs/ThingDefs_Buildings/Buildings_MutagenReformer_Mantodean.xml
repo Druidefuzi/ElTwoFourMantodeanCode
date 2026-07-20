@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+	<!-- THE MUTAGEN REFORMER.
+
+	     Building_TransformerDruid has had an "Evolve" mode since the code was written: a pawn is
+	     carried in, CompRefuelable fuel burns down over a timer, and one mutagen hediff is
+	     replaced by an upgraded one on the same body part. It has never been reachable, because no
+	     ThingDef anywhere in the mod used the class. This def is that missing piece.
+
+	     WHY MayRequire BIOTECH.
+	     The class inherits its shape from vanilla Building_GeneExtractor, and two leftovers still
+	     tie it to Biotech: PostPostMake calls ModLister.CheckBiotech and destroys the building
+	     when it fails, and the working sustainer uses SoundDefOf.GeneExtractor_Working, which is
+	     defined in Data/Biotech. Gating the def means the building simply does not exist without
+	     Biotech, instead of self-destructing or throwing on a null sound. Nothing here actually
+	     touches gene code, so the dependency is removable - it needs the PostPostMake guard
+	     dropped AND the sustainer null-guarded, which is a separate decision, not a silent change.
+
+	     THE UPGRADE PAIRS.
+	     oldHediffs and newHediffs are matched BY INDEX: entry 0 of the first list evolves into
+	     entry 0 of the second. Only the chitinous shell forms an unambiguous chain in
+	     Hediffs_BodyParts_Mutagens.xml; everything else reads as a sidegrade rather than a tier,
+	     so nothing else is wired up. Add pairs by appending to both lists in the same order.
+	     Candidates worth deciding on: LightShield -> HeavyShield, ScythingTalon ->
+	     DevastatingStriker, PiercingJaw -> ToxicJaw. -->
+
+	<ThingDef ParentName="BuildingBase" MayRequire="Ludeon.RimWorld.Biotech">
+		<defName>L24_Manto_MutagenReformer</defName>
+		<label>mutagen reformer</label>
+		<description>A swollen gland-cluster grown around a hollow the size of a body. A mantodean laid inside is held still while the reformer works morphjelly into an existing mutagen, thickening and rebuilding it in place rather than growing a new one.
+
+The occupant stays awake throughout. Hive records describe the sensation as being remade from the inside out, and note that most subjects ask to be put back in.
+
+Empire Report:
+Evidence that a hive has moved past simply issuing mutagens and has begun refining what it already has. Hives with a working reformer field noticeably tougher lesser castes than their numbers would suggest.</description>
+		<thingClass>Mantodean.Druid.GeneExtract.Building_TransformerDruid</thingClass>
+		<containedPawnsSelectable>true</containedPawnsSelectable>
+		<passability>PassThroughOnly</passability>
+		<fillPercent>0.5</fillPercent>
+		<castEdgeShadows>true</castEdgeShadows>
+		<drawerType>MapMeshAndRealTime</drawerType>
+		<tickerType>Normal</tickerType>
+		<size>(3,2)</size>
+		<graphicData>
+			<texPath>Things/Building/OldBuildings/MantoRefinery2</texPath>
+			<graphicClass>Graphic_Single</graphicClass>
+			<drawSize>(3,2)</drawSize>
+			<shadowData>
+				<volume>(2.7, 0.8, 1.7)</volume>
+			</shadowData>
+		</graphicData>
+		<canOverlapZones>false</canOverlapZones>
+		<hasInteractionCell>true</hasInteractionCell>
+		<interactionCellOffset>(0, 0, -1)</interactionCellOffset>
+		<defaultPlacingRot>South</defaultPlacingRot>
+		<designationCategory>L24_DesignationCat_MantoStructures</designationCategory>
+		<uiOrder>2170</uiOrder>
+		<constructionSkillPrerequisite>6</constructionSkillPrerequisite>
+		<statBases>
+			<MaxHitPoints>300</MaxHitPoints>
+			<WorkToBuild>9000</WorkToBuild>
+			<Mass>80</Mass>
+			<Flammability>1.0</Flammability>
+		</statBases>
+		<costList>
+			<L24_Manto_MorphJelly>60</L24_Manto_MorphJelly>
+			<L24_Manto_Ganglion>4</L24_Manto_Ganglion>
+		</costList>
+		<building>
+			<destroySound>BuildingDestroyed_Soft_Big</destroySound>
+		</building>
+		<comps>
+
+			<li Class="CompProperties_Refuelable">
+				<fuelConsumptionRate>1</fuelConsumptionRate>
+				<fuelCapacity>50.0</fuelCapacity>
+				<fuelFilter>
+					<thingDefs>
+						<li>L24_Manto_MorphJelly</li>
+					</thingDefs>
+				</fuelFilter>
+				<consumeFuelOnlyWhenUsed>true</consumeFuelOnlyWhenUsed>
+				<showAllowAutoRefuelToggle>true</showAllowAutoRefuelToggle>
+				<fuelLabel>morphjelly</fuelLabel>
+				<fuelGizmoLabel>morphjelly</fuelGizmoLabel>
+			</li>
+
+			<li Class="Mantodean.Druid.ExtractorComp.CompProperties_Extractor">
+				<canEvolve>true</canEvolve>
+				<canTransform>false</canTransform>
+				<canExtract>false</canExtract>
+
+				<!-- 6 * 2500 = 15000 ticks, six in-game hours. "hours" is one of the strings
+				     Building_TransformerDruid.timeType understands. -->
+				<finishInXTime>6</finishInXTime>
+				<ticksSecondsHoursDaysYears>hours</ticksSecondsHoursDaysYears>
+
+				<evolveDescription>The reformer will work the existing mutagen into its heavier form. The occupant stays inside until it is finished.</evolveDescription>
+
+				<oldHediffs>
+					<li>L24_Mutagen_LightChitinousShell</li>
+					<li>L24_Mutagen_ChitinousShell</li>
+					<li>L24_Mutagen_HeavyChitinousShell</li>
+				</oldHediffs>
+				<newHediffs>
+					<li>L24_Mutagen_ChitinousShell</li>
+					<li>L24_Mutagen_HeavyChitinousShell</li>
+					<li>L24_Mutagen_HulkingChitinousShell</li>
+				</newHediffs>
+			</li>
+
+		</comps>
+		<researchPrerequisites>
+			<li>L24_Research_SimpleMutagens</li>
+		</researchPrerequisites>
+	</ThingDef>
+
+</Defs>
