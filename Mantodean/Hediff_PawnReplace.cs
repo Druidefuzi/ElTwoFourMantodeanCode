@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using UnityEngine;
+﻿using System.Linq;
 using RimWorld;
 using Verse;
 
-namespace Dangerchem.PawnReplace
+namespace Mantodean
 {
     public class Hediff_PawnReplace : HediffWithComps
     {

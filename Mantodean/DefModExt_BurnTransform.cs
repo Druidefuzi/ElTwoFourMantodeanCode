@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Verse;
 
-using UnityEngine;
-using RimWorld;
-using Verse;
-
-namespace Dangerchem.PawnReplace
+namespace Mantodean
 {
     public class DefModExt_BurnTransform : DefModExtension
     {

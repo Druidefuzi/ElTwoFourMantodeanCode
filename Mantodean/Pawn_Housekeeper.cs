@@ -2,7 +2,7 @@
 using RimWorld;
 using System.Collections.Generic;
 
-namespace Housekeeper
+namespace Mantodean
 {
     /*
      * Housekeeper cats are some kind of intermediate between animal and humanlike. They have full-fledged cleaning and hauling work givers instead of stubs other animals have. They would be able to do all relevant jobs, like refueling!

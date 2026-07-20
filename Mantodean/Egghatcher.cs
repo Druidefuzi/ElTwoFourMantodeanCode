@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using RimWorld;
 using Verse;
 using HarmonyLib;
-/*
-namespace CF
-{
+
+namespace Mantodean
+{/*
     public class HatcherExtension : DefModExtension
     {
         public bool hatcheeForcePlayerFaction = false;
@@ -35,6 +35,5 @@ namespace CF
                 }
             }
         }
-    }
+    }*/
 }
-*/

@@ -1,12 +1,10 @@
-﻿using Housekeeper;
+﻿using RimWorld;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Verse;
 using Verse.AI;
 
-namespace RimWorld
+namespace Mantodean
 {
     // copy-paste of JobGiver_Work with a single exception allowing non-colonists to do the job.
     class JobGiver_Housekeeper : JobGiver_Work

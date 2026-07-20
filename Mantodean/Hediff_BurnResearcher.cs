@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using UnityEngine;
-using RimWorld;
+﻿using RimWorld;
 using Verse;
 
-namespace Dangerchem.BurnResearcher
+namespace Mantodean
 {
     public class Hediff_BurnResearcher : HediffWithComps
     {
