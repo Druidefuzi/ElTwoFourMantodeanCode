@@ -23,8 +23,11 @@
 		<insertPriority>1</insertPriority>
 		<thinkRoot Class="ThinkNode_ConditionalHasFaction">
 			<subNodes>
-				<li Class="ThinkNode_ConditionalPawnKind">
-					<pawnKind>L24_Animal_Scarab</pawnKind>
+				<!-- Was ThinkNode_ConditionalPawnKind naming L24_Animal_Scarab. Keying on the
+				     thingClass instead means every worker animal shares this one tree, so adding
+				     another is pure XML: give its race Mantodean.Pawn_Housekeeper as thingClass
+				     and list what it may do in race/mechEnabledWorkTypes. -->
+				<li Class="Mantodean.ThinkNode_ConditionalHousekeeper">
 					<subNodes>
 						<li Class="ThinkNode_Tagger">
 							<tagToGive>TrainedAnimalBehavior</tagToGive>

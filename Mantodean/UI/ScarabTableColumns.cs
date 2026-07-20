@@ -24,10 +24,30 @@ namespace Mantodean
         static ScarabTableColumns()
         {
             PawnTableDef table = MantodeanDefOf.Manto_ScarabWork;
-            ThingDef scarab = MantodeanDefOf.L24_Animal_Scarab;
+            if (table?.columns == null)
+            {
+                return;
+            }
 
-            List<WorkTypeDef> enabled = scarab?.race?.mechEnabledWorkTypes;
-            if (table?.columns == null || enabled.NullOrEmpty())
+            // The union over every race that uses Pawn_Housekeeper, rather than the scarab's list
+            // alone. A second worker animal with a different whitelist then gets its own columns
+            // without anyone touching this file; the per-pawn filtering still happens in
+            // JobGiver_Housekeeper.PawnCanUseWorkGiver, which asks each pawn's own race.
+            HashSet<WorkTypeDef> enabled = new HashSet<WorkTypeDef>();
+            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
+            {
+                if (def.thingClass != typeof(Pawn_Housekeeper) || def.race?.mechEnabledWorkTypes == null)
+                {
+                    continue;
+                }
+
+                foreach (WorkTypeDef w in def.race.mechEnabledWorkTypes)
+                {
+                    enabled.Add(w);
+                }
+            }
+
+            if (enabled.Count == 0)
             {
                 return;
             }
