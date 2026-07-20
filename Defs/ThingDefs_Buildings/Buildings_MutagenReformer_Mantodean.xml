@@ -98,6 +98,16 @@ Evidence that a hive has moved past simply issuing mutagens and has begun refini
 
 				<evolveDescription>The reformer will work the existing mutagen into its heavier form. The occupant stays inside until it is finished.</evolveDescription>
 
+				<!-- Building_TransformerDruid.GetGizmos looks up ALL THREE mode icons before it
+				     checks which modes are switched on, and CompProperties_Extractor only gives
+				     selectIconPath a default. Leaving these two unset made ContentFinder.Get run
+				     on null and throw, which took down the entire gizmo grid rather than just
+				     this building. The code now guards against that as well, but setting them
+				     here keeps the def working on an older assembly. They are never drawn, since
+				     canTransform and canExtract are false. -->
+				<transformIconPath>UI/Gizmos/InsertPawn</transformIconPath>
+				<extractIconPath>UI/Gizmos/InsertPawn</extractIconPath>
+
 				<oldHediffs>
 					<li>L24_Mutagen_LightChitinousShell</li>
 					<li>L24_Mutagen_ChitinousShell</li>

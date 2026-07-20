@@ -596,11 +596,32 @@ namespace Mantodean.Druid.GeneExtract
 
 
 
+        /**
+         * A null or empty icon path means "this mode is not configured", not "look me up".
+         * reportFailure: false keeps a typo'd path from spamming the log every frame the building
+         * is selected; the gizmo simply draws without an icon.
+         */
+        private static Texture2D TryGetIcon(string path)
+        {
+            if (path.NullOrEmpty())
+            {
+                return null;
+            }
+
+            return ContentFinder<Texture2D>.Get(path, false);
+        }
+
         public override IEnumerable<Gizmo> GetGizmos()
         {
-            Texture2D transformIcon = ContentFinder<Texture2D>.Get(CompExtractorComp.transformIcon());
-            Texture2D evolveIcon = ContentFinder<Texture2D>.Get(CompExtractorComp.evolveIcon());
-            Texture2D extractIcon = ContentFinder<Texture2D>.Get(CompExtractorComp.extractIcon());
+            // All three are fetched here, before any of the canTransform / canExtract / canEvolve
+            // checks below, so a def that only switches on ONE mode still ends up looking up the
+            // other two. CompProperties_Extractor only gives selectIconPath a default value;
+            // transformIconPath and extractIconPath are null unless the def sets them, and
+            // ContentFinder.Get(null) throws ArgumentNullException out of a Dictionary lookup.
+            // That took down the whole gizmo grid, not just this building.
+            Texture2D transformIcon = TryGetIcon(CompExtractorComp.transformIcon());
+            Texture2D evolveIcon = TryGetIcon(CompExtractorComp.evolveIcon());
+            Texture2D extractIcon = TryGetIcon(CompExtractorComp.extractIcon());
             foreach (Gizmo gizmo in base.GetGizmos())
             {
                 yield return gizmo;
