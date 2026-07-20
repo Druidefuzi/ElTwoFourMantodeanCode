@@ -1,0 +1,282 @@
+================================================================
+MANTODEAN - HediffComp_DoStuff & HediffComp_DoSeverityStuff
+XML reference for the two do-everything hediff comps
+================================================================
+
+Two HediffComps that let a hediff DO THINGS on a living pawn - deal damage,
+generate research, spawn items or pawns, explode, age the pawn, add another
+hediff, or remove itself. Same menu of effects in both. The only difference is
+WHEN they fire:
+
+    DoStuff           fires on TIME INTERVALS  (every N ticks/hours/days)
+    DoSeverityStuff   fires once the hediff's SEVERITY crosses a threshold
+
+You attach either as a comp inside a HediffDef:
+
+    <HediffDef>
+        <defName>YourHediff</defName>
+        ...
+        <comps>
+            <li Class="Mantodean.Druid.HediffCompProperties_DoStuff">
+                ... fields ...
+            </li>
+        </comps>
+    </HediffDef>
+
+Full class names (the Class= value):
+    Mantodean.Druid.HediffCompProperties_DoStuff
+    Mantodean.Druid.HediffCompProperties_DoSeverityStuff
+
+Both effects run only on the pawn CARRYING the hediff. There is no radius, no
+targeting of other pawns.
+
+
+================================================================
+PART 1 - HediffComp_DoStuff  (time-driven)
+================================================================
+
+Every effect has its own on/off bool, its own interval, and its own amount. Turn
+on the ones you want; the rest stay dormant. Each interval counts in units of
+timeType.
+
+
+TIME
+----
+
+timeType            string, default "Ticks"
+                    The unit every ...EveryXTime field below is multiplied by.
+                    Accepted: Ticks / hours / Hours / Days / days / Years / years
+                        Ticks = 1
+                        hours = 2500      (60000 ticks/day, 24 in-game hours)
+                        Days  = 60000
+                        Years = 3600000
+                    So <damageEveryXTime>2</damageEveryXTime> with
+                    <timeType>Days</timeType> means every 120000 ticks.
+
+                    NOTE: only these exact strings work. A typo silently falls
+                    through to a multiplier of 1 (ticks).
+
+
+DAMAGE
+------
+
+getsDamage          bool, default false     turn this effect on
+amountDamage        int, default 0          damage dealt each time
+damageType          DamageDef               which damage. SET THIS - the damage
+                                            branch uses it directly with no
+                                            fallback, so leaving it null will
+                                            error. (There is unrelated fallback
+                                            code nearby that picks Flame, but it
+                                            is not on this path.)
+damageEveryXTime    int, default 300        interval, in timeType units
+
+
+RESEARCH
+--------
+
+getsResearch        bool, default false
+amountOfResearch    int, default 1          raw points fed to the CURRENT normal
+                                            research project each time
+researchEveryXTime  int, default 300
+
+                    Only advances a normal research project. It cannot touch
+                    Anomaly knowledge - that is a separate system this comp does
+                    not reach. Does nothing while no project is selected.
+
+
+SPAWN A THING
+-------------
+
+canSpawnThing       bool, default false
+thingDefToSpawn     ThingDef                what to drop
+amountOfThings      int, default 2
+spawnThingEveryXTime int, default 300
+
+
+SPAWN A PAWN
+------------
+
+canSpawnPawn        bool, default false
+pawnToSpawn         PawnKindDef             what to spawn
+amountOfPawns       int, default 2
+factionOfPawn       FactionDef              faction for the spawned pawn(s)
+spawnPawnEveryXTime int, default 300
+
+
+AGE THE PAWN
+------------
+
+getsOlder           bool, default false
+olderOrYounger      string, default "Older"     exactly "Older" or "Younger".
+                                                Any other string (including the
+                                                default-looking "Lower") does
+                                                nothing - the code only matches
+                                                those two.
+yearsOrDaysOrTicks  string, default "Ticks"      unit of timeOlder
+timeOlder           long, default 0              how much to shift age by
+getsOlderEveryXTime int, default 300
+
+
+ADD A HEDIFF
+------------
+
+addHeddif           bool, default false     (note: spelled "Heddif" in the code -
+                                            the XML tag is <addHeddif>, misspelling
+                                            and all)
+hediffToAdd         HediffDef               which hediff to apply
+bodyPartForHediff   BodyPartRecord          optional target part
+addsHediffAfterXTime int, default 300
+
+
+EXPLODE
+-------
+
+doExplosion         bool, default false
+explosionDamageDef  DamageDef               damage type of the blast
+explosionRadius     int, default 5
+damageAmountExplosion int, default 1
+armorPenetrationExplosion int, default 0
+gasExplosion        bool, default false     blast releases gas instead
+gasType             GasType                 which gas, if gasExplosion
+filthOrBloodToSpawn ThingDef                filth/blood left behind
+explosionSound      SoundDef
+getsKilledInExplosion bool, default false   kill the carrier with the blast
+explodesEveryXTime  int, default 300
+
+
+KILL
+----
+
+getsKilled          bool, default false
+getsKilledAfterXTime float, default 0       time until the carrier dies
+
+
+REMOVE ITSELF
+-------------
+
+removeThis          bool, default false     hediff removes itself after the timer
+removeAfterXTime    int, default 300
+
+
+A REAL EXAMPLE (Red Jelly, from the mod)
+----------------------------------------
+
+    <li Class="Mantodean.Druid.HediffCompProperties_DoStuff">
+        <timeType>Ticks</timeType>
+        <getsDamage>true</getsDamage>
+        <damageEveryXTime>1200</damageEveryXTime>
+        <getsResearch>true</getsResearch>
+        <amountOfResearch>450</amountOfResearch>
+        <researchEveryXTime>600</researchEveryXTime>
+    </li>
+
+Two effects on one hediff: light damage every 1200 ticks, and 450 research points
+every 600 ticks, for as long as the hediff lasts. Damage and research keep their
+own independent timers.
+
+
+================================================================
+PART 2 - HediffComp_DoSeverityStuff  (severity-driven)
+================================================================
+
+Same effect menu, but instead of a repeating timer it fires when the hediff's
+SEVERITY crosses a line. Use it for "when this disease gets bad enough, X
+happens" rather than "every so often, X happens".
+
+The whole comp watches ONE threshold:
+
+lowerOrHigher       string, default "Higher"
+                    "Higher"  -> fires when Severity >= doAtSeverity
+                    "Lower"   -> fires when Severity <= doAtSeverity
+doAtSeverity        float, default 1        the threshold
+
+Every effect below shares that one condition. There is no per-effect interval
+here - severity is the trigger.
+
+
+EFFECTS
+
+    getsDamage / amountDamage / damageType
+    getsResearch / amountOfResearch
+    canSpawnThing / thingDefToSpawn / amountOfThings
+    canSpawnPawn / amountOfPawns / pawnToSpawn / factionOfPawn
+    getsOlder / olderOrYounger / yearsOrDaysOrTicks / timeOlder
+    getsKilled / getsKilledAfterXTime
+    addHeddif / hediffToAdd / bodyPartForHediff
+    doExplosion / gasExplosion / getsKilledInExplosion / explosionDamageDef /
+        filthOrBloodToSpawn / explosionRadius / armorPenetrationExplosion /
+        damageAmountExplosion / explosionSound / gasType
+    removeThis
+
+    All identical in meaning to the DoStuff fields above.
+
+Two extras DoStuff does not have:
+
+corpseDestroyedAfterkill  bool, default false
+                          if the effect kills the pawn, also destroy the corpse
+
+One behaviour difference from DoStuff: here the damage and spawn branches DO fill
+in a fallback when you leave the def unset - damageType defaults to Flame,
+thingDefToSpawn defaults to Beer. Do not rely on those; set what you mean. (This
+is also why the two comps are not quite interchangeable field-for-field.)
+
+(there is no explodesEveryXTime / damageEveryXTime / removeAfterXTime here - none
+of the ...EveryXTime timers exist, because the trigger is severity, not time)
+
+
+HOW SEVERITY GETS THERE
+
+DoSeverityStuff only reacts to severity; something else has to MOVE it. Usually a
+vanilla comp on the same hediff does that:
+
+    <comps>
+        <li Class="HediffCompProperties_SeverityPerDay">
+            <severityPerDay>0.2</severityPerDay>
+        </li>
+        <li Class="Mantodean.Druid.HediffCompProperties_DoSeverityStuff">
+            <doAtSeverity>1.0</doAtSeverity>
+            <getsKilled>true</getsKilled>
+        </li>
+    </comps>
+
+Severity climbs 0.2/day; at 1.0 the carrier dies. Red Jelly and Corpse Jelly pair
+DoStuff with SeverityPerDay in exactly this way.
+
+
+================================================================
+WHICH ONE TO USE
+================================================================
+
+Reach for DoStuff when the effect should REPEAT on a clock - drip damage, steady
+resource output, periodic spawns.
+
+Reach for DoSeverityStuff when the effect is a STATE the hediff builds toward -
+gets bad, then something happens once. Pair it with SeverityPerDay (or
+SeverityPerSecond, or an Immunizable comp) to make severity actually move.
+
+You can put both on one hediff: a slow tick of damage from DoStuff, plus a
+one-shot payload from DoSeverityStuff when it finally maxes out.
+
+
+================================================================
+GOTCHAS
+================================================================
+
+- The string fields are case-fussy and typo-fragile. timeType, olderOrYounger,
+  lowerOrHigher and yearsOrDaysOrTicks match on exact strings; a wrong one fails
+  quiet, not loud. Copy them from a working def.
+
+- <addHeddif> really is misspelled in the tag. It is not <addHediff>.
+
+- Research only feeds NORMAL projects, never Anomaly knowledge.
+
+- Effects are invisible unless they explode. There is no built-in mote or
+  effecter, so a damage or research tick gives the player no feedback on its own.
+
+- Every effect hits only the carrier. Nothing here affects nearby pawns.
+
+- These comps are large: one class carries the whole menu rather than one class
+  per effect the way vanilla does it. Only a handful of hediffs across the mods
+  actually use them, so when something looks broken, check the specific def
+  rather than assuming the comp is fine - the jellies generated zero research for
+  a long time before anyone noticed.
