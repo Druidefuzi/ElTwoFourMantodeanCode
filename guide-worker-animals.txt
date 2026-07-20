@@ -1,0 +1,151 @@
+================================================================
+MANTODEAN - MAKING AN ANIMAL DO COLONY WORK
+How to add a worker animal without touching any C#
+================================================================
+
+
+THE SHORT VERSION
+-----------------
+
+Two things on the animal's ThingDef, and nothing else:
+
+    <ThingDef ParentName="...">
+        <defName>L24_Animal_YourAnimal</defName>
+
+        <thingClass>Mantodean.Pawn_Housekeeper</thingClass>     <-- 1
+
+        <race>
+            <mechEnabledWorkTypes>                              <-- 2
+                <li>Cleaning</li>
+                <li>Hauling</li>
+                <li>Firefighter</li>
+            </mechEnabledWorkTypes>
+            ...
+        </race>
+    </ThingDef>
+
+That is the whole thing. No new ThinkTreeDef, no DefOf entry, no code. The animal
+starts working as soon as it is tamed, shows up in the Scarabs tab with a column
+per work type you listed, and the player can set priorities on it there.
+
+This is new. Until now the think tree named L24_Animal_Scarab explicitly and the
+tab built its columns from the scarab's list alone, so a second worker animal
+would have needed its own think tree. Both now key on the thingClass instead.
+
+
+WHAT EACH PIECE ACTUALLY DOES
+-----------------------------
+
+thingClass = Mantodean.Pawn_Housekeeper
+
+    Swaps the pawn class. On spawn it fakes up the three trackers a colonist
+    would have - skills (all at level 6, so the market value stays sane), an
+    empty story tracker, and work settings - because the job giver is a copy of
+    the vanilla JobGiver_Work and needs them to exist.
+
+    It also applies your mechEnabledWorkTypes list to those work settings. That
+    part is worth knowing about: RimWorld's own EnableAndInitialize ignores
+    mechEnabledWorkTypes unless the pawn is a colony MECHANOID, so before this
+    was fixed the list was decorative and Mining and PlantCutting never ran.
+
+race/mechEnabledWorkTypes
+
+    The whitelist. Vanilla work type defNames, one per line. This is the single
+    source of truth - it drives what the animal will do, and which columns show
+    up in the tab.
+
+The Scarabs tab
+
+    Appears in the bottom button bar between Animals and Wildlife, and only once
+    the player owns at least one worker animal. It is the vanilla work tab
+    machinery pointed at these pawns, so priority boxes, tooltips, shift-click to
+    fill a column and the manual-priorities mode all behave exactly as they do
+    for colonists.
+
+    Columns are the union of every worker animal's whitelist. An animal is still
+    only offered the work types on its own list.
+
+
+WHICH WORK TYPES ACTUALLY WORK
+------------------------------
+
+Confirmed working, because they are alwaysStartActive in vanilla and have always
+run for scarabs:
+
+    Cleaning, Hauling, Firefighter
+
+Should work, newly reachable, worth testing:
+
+    Mining, PlantCutting
+
+Unknown, test before shipping:
+
+    Doctor, Growing, Cooking, Construction, and the rest
+
+The catch is that these pawns are Intelligence.Animal, and some vanilla
+WorkGivers check for Humanlike or ToolUser before they will hand out a job.
+WorkGiver_Tend branches on the patient being humanlike, for instance.
+
+There is no risk in trying: JobGiver_Housekeeper already screens every work giver
+through ShouldSkip and MissingRequiredCapacity, so an unsuitable one is skipped
+quietly rather than throwing. Add the work type, tame one, watch what it does.
+
+Also worth revisiting: the comment in Race_Animals_Mantodean.xml says ToolUser
+intelligence "breaks Pick Up And Haul". If that is no longer true for the 1.6
+build of PUAH, switching to ToolUser would remove a whole class of WorkGiver
+eligibility problems at once.
+
+
+NO TRAINING REQUIRED ANYMORE
+----------------------------
+
+The think tree used to wrap the job giver in a check for completed Obedience
+training. A freshly tamed animal wandered until a handler had trained it, and -
+much worse - silently stopped working again once obedience decayed below the
+threshold, with nothing anywhere explaining why.
+
+That check is gone at your request. Animals work as soon as they have a faction.
+Obedience still matters for everything else it normally does, and is still on the
+Animals tab.
+
+
+THINGS THAT WILL TRIP YOU UP
+----------------------------
+
+Former humans are excluded.
+    Anything with a childhood or adulthood backstory is treated as a Pawnmorpher
+    former human, skipped by the think tree, and left out of the tab. They have
+    real work settings and belong to the colonist UI. This is deliberate - listing
+    them would show the same pawn in two tabs.
+
+The animal must be TAMED, not just marked for taming.
+    The think tree checks for a faction. An animal with a pending tame
+    designation has none yet. If the tab button is missing, check the Animals tab
+    first: if it is not listed there, it is not tamed.
+
+Only animals in THIS assembly are covered.
+    The class check is a type check. A separate mod with its own copy of
+    Pawn_Housekeeper has its own type, and this will not see it. Such a mod would
+    need to reference Mantodean.dll rather than copy the code.
+
+Trainability still needs to allow taming at all.
+    Unrelated to work, but an animal with trainability None cannot be tamed, so
+    it can never get a faction.
+
+
+TROUBLESHOOTING
+---------------
+
+Tab button missing
+    No tamed worker animal on the current map. The button hides itself otherwise.
+
+Animal listed, boxes greyed out or absent
+    The work type is not on that animal's mechEnabledWorkTypes.
+
+Animal has priorities set but does nothing
+    The work giver is refusing an Intelligence.Animal pawn. Try a different work
+    type, or look at whether that giver requires ToolUser.
+
+Priorities reset on load
+    Work settings are rebuilt on spawn from mechEnabledWorkTypes. If you change
+    the list, existing saved animals pick up the new one the next time they spawn.
