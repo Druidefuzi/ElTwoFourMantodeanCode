@@ -28,18 +28,23 @@ namespace Mantodean.Druid
         {
             base.CompPostTickInterval(ref severityAdjustment, delta);
 
-            if (Props.getsResearch)
+            if (Props.getsResearch && Props.researchEveryXTime > 0)
             {
-                if (researchTick > 0)
+                // CompPostTickInterval does NOT fire once per tick. Thing.DoTick batches it:
+                // the interval is min(max(UpdateRateTicks, 1), 15), and for a pawn UpdateRateTicks
+                // comes from GenTicks.GetCameraUpdateRate - 15 when the pawn is off-screen or on
+                // another map, (CurrentZoom + 1) otherwise. Decrementing by 1 therefore counted
+                // CALLS, not ticks, which ran the timer up to 15x slow and made the rate depend on
+                // where the player was looking. Subtract the elapsed ticks instead.
+                researchTick -= delta;
+
+                if (researchTick <= 0)
                 {
-                    researchTick--;
+                    GenerateResearch();
 
-                    if (researchTick <= 0)
-                    {
-                        GenerateResearch();
-
-                        researchTick = Props.researchEveryXTime;
-                    }
+                    // += rather than = so overshoot carries into the next interval and the
+                    // long-run average stays exactly researchEveryXTime.
+                    researchTick += Props.researchEveryXTime;
                 }
             }
         }
@@ -69,10 +74,24 @@ namespace Mantodean.Druid
         {
             if (parent.pawn.RaceProps.Humanlike && (parent.pawn.IsColonist || parent.pawn.IsPrisoner))
             {
-                if (!Find.ResearchManager.IsCurrentProject(null))
+                // Was: if (!Find.ResearchManager.IsCurrentProject(null))
+                //
+                // That guard is inverted whenever the Anomaly DLC is active, which is why the
+                // jellies produced nothing. EnsureKnowledgeProjectsInitialized() seeds one
+                // KnowledgeCategoryProject per KnowledgeCategoryDef with project = null, and
+                // IsCurrentProject(null) walks that list and matches one of those nulls. It
+                // therefore returns true whenever ANY knowledge category has no project selected
+                // (the normal state), the negation makes it false, and ResearchPerformed is never
+                // reached. Without Anomaly the guard happened to work, which is why this looked
+                // like it used to function.
+                //
+                // GetProject() with no argument is a plain getter for currentProj, so this asks
+                // the question that was actually meant. It also avoids the
+                // "Researched without having an active project" error that ResearchPerformed
+                // logs when currentProj is null.
+                if (Find.ResearchManager.GetProject() != null)
                 {
                     Find.ResearchManager.ResearchPerformed(Props.amountOfResearch, null);
-                    Log.Message("[Hediff_DoStuff] Research point generated successfully.");
                 }
             }
         }

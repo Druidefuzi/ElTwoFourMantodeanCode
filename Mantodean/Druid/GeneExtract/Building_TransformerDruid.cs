@@ -154,8 +154,8 @@ namespace Mantodean.Druid.GeneExtract
             }
             if (ticksRemaining < amountOfTicks)
             {
-                Log.Message(amountOfTicks);
-                Log.Message(ticksRemaining);
+                // Two Log.Message calls used to sit here. This is Tick(), so they fired every
+                // single tick for as long as the machine ran and flooded the log.
                 startWorking = true;
             }
             if (startWorking)
@@ -411,9 +411,12 @@ namespace Mantodean.Druid.GeneExtract
                     Hediff oldOne = ContainedPawn.health.hediffSet.GetFirstHediffOfDef(oldHediff);
                     BodyPartRecord partOfOld = oldOne.Part;
                     Hediff newOne = HediffMaker.MakeHediff(newHediff, ContainedPawn, partOfOld);
-                    Log.Message(oldOne);
-                    Log.Message(newOne);
-                    //this.ContainedPawn.health.RemoveHediff(oldOne);
+
+                    // The removal was commented out, so Evolve added the upgraded mutagen while
+                    // leaving the old one in place - the pawn ended up carrying both on the same
+                    // body part instead of being upgraded. partOfOld and newOne are both captured
+                    // above, so removing first is safe and avoids the two ever coexisting.
+                    ContainedPawn.health.RemoveHediff(oldOne);
                     ContainedPawn.health.AddHediff(newOne);
                     string letterMessage = ContainedPawn.Label + " has evolved and replaced " + ContainedPawn.Possessive() + " " + oldHediff.label + " with " + newHediff.label;
                     // Messages.Message(ContainedPawn.Label + " has evolved and replaced " + ContainedPawn.Possessive() + " " + oldHediff + " with " + newHediff.label + c.transformPawn().label, new LookTargets(ContainedPawn), MessageTypeDefOf.PositiveEvent);
